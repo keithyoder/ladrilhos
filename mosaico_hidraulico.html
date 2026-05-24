@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mosaico de Ladrilhos Hidráulicos</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f4f0; color: #2c2c2a;
+      height: 100vh; display: flex; flex-direction: column;
+    }
+    header {
+      padding: 12px 20px; background: #fff;
+      border-bottom: 1px solid #e0ded8;
+      display: flex; align-items: center; gap: 12px;
+    }
+    header h1 { font-size: 15px; font-weight: 600; color: #2c2c2a; }
+    header p  { font-size: 12px; color: #888780; }
+    #app { display: flex; flex: 1; overflow: hidden; }
+    #sidebar {
+      width: 230px; min-width: 230px; background: #fff;
+      border-right: 1px solid #e0ded8;
+      display: flex; flex-direction: column;
+      overflow-y: auto; padding: 16px; gap: 20px;
+    }
+    .section-label {
+      font-size: 10px; font-weight: 600; color: #888780;
+      text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;
+    }
+    #pattern-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .pattern-btn {
+      aspect-ratio: 1; border: 1.5px solid #e0ded8; border-radius: 8px;
+      background: #fff; cursor: pointer; padding: 6px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .pattern-btn:hover { border-color: #b4b2a9; background: #faf9f7; }
+    .pattern-btn.active { border: 2px solid #1D9E75; background: #f0faf6; }
+    .pattern-btn canvas { width: 100%; height: auto; display: block; }
+    .pattern-btn span { font-size: 10px; color: #888780; text-align: center; }
+    .ctrl-block { display: flex; flex-direction: column; gap: 10px; }
+    .ctrl-row   { display: flex; flex-direction: column; gap: 5px; }
+    .ctrl-label { font-size: 12px; color: #5f5e5a; display: flex; justify-content: space-between; }
+    .ctrl-label strong { font-weight: 600; color: #2c2c2a; }
+    input[type=range] {
+      width: 100%; -webkit-appearance: none;
+      height: 4px; border-radius: 2px; background: #d3d1c7; outline: none; cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 16px; height: 16px;
+      border-radius: 50%; background: #1D9E75; cursor: pointer;
+    }
+    .mode-btns { display: flex; flex-direction: column; gap: 6px; }
+    .mode-btn {
+      font-size: 12px; padding: 7px 10px;
+      border: 1px solid #e0ded8; border-radius: 8px;
+      background: #fff; cursor: pointer; text-align: left; color: #2c2c2a;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .mode-btn:hover { background: #f5f4f0; }
+    .mode-btn.active { background: #f0faf6; border-color: #1D9E75; font-weight: 600; color: #085041; }
+    .color-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .color-swatch {
+      width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
+      border: 3px solid transparent; transition: border-color 0.12s, transform 0.1s; outline: none;
+    }
+    .color-swatch:hover { transform: scale(1.1); }
+    .color-swatch.active { border-color: #2c2c2a; }
+    #canvas-area {
+      flex: 1; overflow: hidden; background: #eae8e2;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #mosaic-canvas { display: block; image-rendering: crisp-edges; }
+    #export-btn {
+      margin-top: auto; padding: 9px 14px;
+      background: #1D9E75; color: #fff; border: none;
+      border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s;
+    }
+    #export-btn:hover { background: #0F6E56; }
+    hr.divider { border: none; border-top: 1px solid #e0ded8; margin: 0; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Mosaico de Ladrilhos Hidráulicos</h1>
+    <p>Escolha um padrão, modo de composição e cores</p>
+  </div>
+</header>
+
+<div id="app">
+  <div id="sidebar">
+    <div>
+      <p class="section-label">Padrão</p>
+      <div id="pattern-grid"></div>
+    </div>
+    <hr class="divider">
+    <div>
+      <p class="section-label">Composição</p>
+      <div class="mode-btns">
+        <button class="mode-btn active" data-mode="mirror">Rotação 4× (2×2)</button>
+        <button class="mode-btn" data-mode="simple">Grade simples</button>
+        <button class="mode-btn" data-mode="rot4">Rotação por 90°</button>
+      </div>
+    </div>
+    <hr class="divider">
+    <div>
+      <p class="section-label">Cores do ladrilho</p>
+      <div class="color-row" id="palette"></div>
+    </div>
+    <hr class="divider">
+    <div class="ctrl-block">
+      <p class="section-label">Tamanho</p>
+      <div class="ctrl-row">
+        <span class="ctrl-label">Ladrilho <strong id="size-val">60</strong>px</span>
+        <input type="range" min="30" max="120" step="5" value="60" id="tile-size">
+      </div>
+    </div>
+    <hr class="divider">
+    <div class="ctrl-block">
+      <p class="section-label">Junta</p>
+      <div class="ctrl-row">
+        <span class="ctrl-label">Espessura <strong id="grout-val">3</strong>px</span>
+        <input type="range" min="1" max="12" step="1" value="3" id="grout-size">
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">Cor</span>
+        <div class="color-row" id="grout-palette"></div>
+      </div>
+    </div>
+    <hr class="divider">
+    <button id="export-btn">Exportar PNG</button>
+  </div>
+
+  <div id="canvas-area">
+    <canvas id="mosaic-canvas"></canvas>
+  </div>
+</div>
+
+<!-- ═══ Tiles: adicione novos <script src="..."> aqui ═══ -->
+<script>window.TILES = [];</script>
+<script src="tiles/quatrefoil.js"></script>
+<script src="tiles/estrela.js"></script>
+<script src="tiles/diagonal.js"></script>
+<script src="tiles/flor.js"></script>
+<script src="tiles/chevron.js"></script>
+<script src="tiles/xadrez.js"></script>
+<script src="tiles/losango_flor.js"></script>
+<script src="tiles/petala.js"></script>
+<script src="tiles/triangulo.js"></script>
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<script>
+const PATTERNS = window.TILES;
+
+const PALETTES = [
+  { name: 'Tradicional',   fg: '#1D4E8F', bg: '#F5E6C8', acc: '#C8402A' },
+  { name: 'Branco e azul', fg: '#1D4E8F', bg: '#EEF4FB', acc: '#5B9BD5' },
+  { name: 'Terracota',     fg: '#C8402A', bg: '#F5E6C8', acc: '#3B6D11' },
+  { name: 'Neutro',        fg: '#444441', bg: '#F1EFE8', acc: '#888780' },
+  { name: 'Verde',         fg: '#085041', bg: '#E1F5EE', acc: '#1D9E75' },
+  { name: 'Noite',         fg: '#E6F1FB', bg: '#042C53', acc: '#85B7EB' },
+  { name: 'Foto verde',    fg: '#3B6D11', bg: '#F4F2EC', acc: '#97C459' },
+  { name: 'Terracota escuro', fg: '#7B2008', bg: '#F4F0E0', acc: '#C8402A' },
+  { name: 'Azul moderno',    fg: '#3B7EA1', bg: '#E8E8E8', acc: '#8A9BA8' },
+];
+
+const GROUT_COLORS = [
+  { name: 'Cinza claro', color: '#C8C6BE' },
+  { name: 'Cinza médio', color: '#888780' },
+  { name: 'Cinza escuro', color: '#444441' },
+  { name: 'Branco',       color: '#F1EFE8' },
+  { name: 'Areia',        color: '#C4AA80' },
+];
+
+const state = {
+  pattern:    PATTERNS[0],
+  mode:       PATTERNS[0].composicao || 'simple',
+  palette:    PALETTES[0],
+  tileSize:   60,
+  groutSize:  3,
+  groutColor: GROUT_COLORS[0].color,
+};
+
+const canvas = document.getElementById('mosaic-canvas');
+const ctx    = canvas.getContext('2d');
+
+function makeTile(s, angle, pal) {
+  const oc = document.createElement('canvas');
+  oc.width = s; oc.height = s;
+  const oc2 = oc.getContext('2d');
+  if (angle === 0) {
+    state.pattern.draw(oc2, 0, 0, s, pal);
+  } else {
+    oc2.save();
+    oc2.translate(s/2, s/2); oc2.rotate(angle); oc2.translate(-s/2, -s/2);
+    state.pattern.draw(oc2, 0, 0, s, pal);
+    oc2.restore();
+  }
+  return oc;
+}
+
+function makeTileMirror(s, flipH, flipV, pal) {
+  const oc = document.createElement('canvas');
+  oc.width = s; oc.height = s;
+  const oc2 = oc.getContext('2d');
+  oc2.save();
+  oc2.translate(flipH ? s : 0, flipV ? s : 0);
+  oc2.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+  state.pattern.draw(oc2, 0, 0, s, pal);
+  oc2.restore();
+  return oc;
+}
+
+function render() {
+  const area = document.getElementById('canvas-area');
+  const W = area.clientWidth, H = area.clientHeight;
+  canvas.width = W; canvas.height = H;
+  const g = state.groutSize, ts = state.tileSize, step = ts + g;
+  const pal = state.palette, mode = state.mode;
+  ctx.fillStyle = state.groutColor;
+  ctx.fillRect(0, 0, W, H);
+  const cols = Math.ceil(W / step) + 2;
+  const rows = Math.ceil(H / step) + 2;
+  const cache = {};
+  const getTile = (key, maker) => cache[key] || (cache[key] = maker());
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const x = col * step, y = row * step;
+      let img;
+      if (mode === 'rot4') {
+        const cell = (row%2)*2 + (col%2);
+        img = getTile('r'+cell, () => makeTile(ts, cell*Math.PI/2, pal));
+      } else if (mode === 'mirror') {
+        const fH = col%2===1, fV = row%2===1;
+        img = getTile('m'+(fH?1:0)+(fV?1:0), () => makeTileMirror(ts, fH, fV, pal));
+      } else {
+        img = getTile('s0', () => makeTile(ts, 0, pal));
+      }
+      ctx.drawImage(img, x, y);
+    }
+  }
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === mode)
+  );
+}
+
+function buildPatternGrid() {
+  const grid = document.getElementById('pattern-grid');
+  PATTERNS.forEach((p, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'pattern-btn' + (i===0 ? ' active' : '');
+    btn.title = p.label;
+    const pc = document.createElement('canvas');
+    pc.width = 64; pc.height = 64;
+    p.draw(pc.getContext('2d'), 0, 0, 64, p.defaultPalette || PALETTES[0]);
+    const lbl = document.createElement('span');
+    lbl.textContent = p.label;
+    btn.appendChild(pc); btn.appendChild(lbl);
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.pattern-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.pattern = p;
+      if (p.composicao) setMode(p.composicao);
+      render();
+    });
+    grid.appendChild(btn);
+  });
+}
+
+function updatePatternPreviews() {
+  document.querySelectorAll('.pattern-btn').forEach((btn, i) => {
+    const pc = btn.querySelector('canvas');
+    if (!pc) return;
+    const c = pc.getContext('2d');
+    c.clearRect(0, 0, 64, 64);
+    PATTERNS[i].draw(c, 0, 0, 64, state.palette);
+  });
+}
+
+function buildPalette() {
+  const row = document.getElementById('palette');
+  PALETTES.forEach((pal, i) => {
+    const sw = document.createElement('button');
+    sw.className = 'color-swatch' + (i===0 ? ' active' : '');
+    sw.style.background = pal.fg; sw.title = pal.name;
+    sw.addEventListener('click', () => {
+      document.querySelectorAll('#palette .color-swatch').forEach(s => s.classList.remove('active'));
+      sw.classList.add('active');
+      state.palette = pal;
+      updatePatternPreviews(); render();
+    });
+    row.appendChild(sw);
+  });
+}
+
+function buildGroutPalette() {
+  const row = document.getElementById('grout-palette');
+  GROUT_COLORS.forEach((gc, i) => {
+    const sw = document.createElement('button');
+    sw.className = 'color-swatch' + (i===0 ? ' active' : '');
+    sw.style.background = gc.color; sw.title = gc.name;
+    sw.addEventListener('click', () => {
+      document.querySelectorAll('#grout-palette .color-swatch').forEach(s => s.classList.remove('active'));
+      sw.classList.add('active');
+      state.groutColor = gc.color; render();
+    });
+    row.appendChild(sw);
+  });
+}
+
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => { setMode(btn.dataset.mode); render(); });
+});
+
+document.getElementById('tile-size').addEventListener('input', e => {
+  state.tileSize = parseInt(e.target.value);
+  document.getElementById('size-val').textContent = state.tileSize;
+  render();
+});
+
+document.getElementById('grout-size').addEventListener('input', e => {
+  state.groutSize = parseInt(e.target.value);
+  document.getElementById('grout-val').textContent = state.groutSize;
+  render();
+});
+
+document.getElementById('export-btn').addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.download = 'mosaico.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
+
+window.addEventListener('resize', render);
+buildPatternGrid();
+buildPalette();
+buildGroutPalette();
+setTimeout(render, 50);
+</script>
+</body>
+</html>
