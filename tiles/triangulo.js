@@ -2,7 +2,11 @@
 // ─────────────────────────────────────────────────────
 // Três triângulos
 //
-// Inspirado em ladrilho hidráulico moderno.
+// Simetria: C1 — nenhuma simetria geométrica
+// Composições úteis:
+//   simple  — grade simples (todos iguais)
+//   rot4    — rotação 90° (cria ampulhetas e losangos)
+//   mirror  — espelho 2×2
 //
 // Estrutura:
 //   - Triângulo grande (fg): metade do tile
@@ -11,47 +15,36 @@
 //     vértices: (s,0) → (s,s) → (0,s)
 //   - Triângulo pequeno (bg): subdivide o triângulo médio
 //     vértices: (s,0) → (s,s) → (c,c)
-//     onde c = centro do tile
-//
-// As três cores devem ter contraste entre si para
-// o efeito geométrico funcionar bem.
 //
 // Paleta sugerida:
-//   fg:  azul           #3B7EA1
-//   acc: cinza          #8A9BA8
-//   bg:  branco/creme   #E8E8E8
-//
-// Composição recomendada: Rotação por 90°
+//   fg:  azul    #3B7EA1
+//   acc: cinza   #8A9BA8
+//   bg:  branco  #E8E8E8
 // ─────────────────────────────────────────────────────
 
 window.TILES.push({
   id: 'triangulo',
   label: 'Triângulo',
+  simetria: 'C1',
+  composicoes: ['simple', 'rot4', 'mirror'],
   composicao: 'rot4',
   defaultPalette: { fg: '#3B7EA1', acc: '#8A9BA8', bg: '#E8E8E8' },
   draw(ctx, x, y, s, pal) {
     ctx.save();
     ctx.translate(x, y);
     const c = s / 2;
-
-    // triângulo grande — fg
     ctx.fillStyle = pal.fg;
     ctx.beginPath();
-    ctx.moveTo(0, 0); ctx.lineTo(s, 0); ctx.lineTo(0, s);
+    ctx.moveTo(0,0); ctx.lineTo(s,0); ctx.lineTo(0,s);
     ctx.closePath(); ctx.fill();
-
-    // triângulo médio — acc
     ctx.fillStyle = pal.acc;
     ctx.beginPath();
-    ctx.moveTo(s, 0); ctx.lineTo(s, s); ctx.lineTo(0, s);
+    ctx.moveTo(s,0); ctx.lineTo(s,s); ctx.lineTo(0,s);
     ctx.closePath(); ctx.fill();
-
-    // triângulo pequeno — bg (subdivide o médio)
     ctx.fillStyle = pal.bg;
     ctx.beginPath();
-    ctx.moveTo(s, 0); ctx.lineTo(s, s); ctx.lineTo(c, c);
+    ctx.moveTo(s,0); ctx.lineTo(s,s); ctx.lineTo(c,c);
     ctx.closePath(); ctx.fill();
-
     ctx.restore();
   }
 });

@@ -153,6 +153,7 @@
 <script src="tiles/losango_flor.js"></script>
 <script src="tiles/petala.js"></script>
 <script src="tiles/triangulo.js"></script>
+<script src="tiles/trelica_marroquina.js"></script>
 <!-- ═══════════════════════════════════════════════════════════ -->
 
 <script>
@@ -254,6 +255,15 @@ function setMode(mode) {
   );
 }
 
+function updateModeButtons() {
+  const composicoes = state.pattern.composicoes || ['simple', 'rot4', 'mirror'];
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    const available = composicoes.includes(b.dataset.mode);
+    b.style.opacity = available ? '1' : '0.35';
+    b.title = available ? '' : 'Não recomendado para este padrão';
+  });
+}
+
 function buildPatternGrid() {
   const grid = document.getElementById('pattern-grid');
   PATTERNS.forEach((p, i) => {
@@ -271,6 +281,7 @@ function buildPatternGrid() {
       btn.classList.add('active');
       state.pattern = p;
       if (p.composicao) setMode(p.composicao);
+      updateModeButtons();
       render();
     });
     grid.appendChild(btn);
@@ -345,6 +356,7 @@ window.addEventListener('resize', render);
 buildPatternGrid();
 buildPalette();
 buildGroutPalette();
+updateModeButtons();
 setTimeout(render, 50);
 </script>
 </body>

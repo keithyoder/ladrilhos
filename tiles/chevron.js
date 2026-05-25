@@ -2,6 +2,12 @@
 // ─────────────────────────────────────────────────────
 // Chevron (setas)
 //
+// Simetria: D1v — reflexão vertical apenas
+// Composições úteis:
+//   simple  — grade simples (setas todas iguais)
+//   rot4    — rotação 90° (setas em 4 direções)
+//   mirror  — espelho 2×2
+//
 // Estrutura:
 //   - Fundo na cor bg
 //   - 3 faixas de chevron na cor fg
@@ -15,13 +21,13 @@
 //   fg:  azul escuro   #1D4E8F
 //   acc: terracota     #C8402A
 //   bg:  areia         #F5E6C8
-//
-// Composição recomendada: Grade simples
 // ─────────────────────────────────────────────────────
 
 window.TILES.push({
   id: 'chevron',
   label: 'Chevron',
+  simetria: 'D1v',
+  composicoes: ['simple', 'rot4', 'mirror'],
   composicao: 'simple',
   defaultPalette: { fg: '#1D4E8F', acc: '#C8402A', bg: '#F5E6C8' },
   draw(ctx, x, y, s, pal) {
